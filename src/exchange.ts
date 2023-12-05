@@ -233,6 +233,9 @@ export class Exchange {
   public get clockTimestamp(): number {
     return this._clockTimestamp;
   }
+  public set clockTimestamp(timestamp: number) {
+    this._clockTimestamp = timestamp;
+  }
   private _clockTimestamp: number = undefined;
 
   /**
@@ -636,9 +639,9 @@ export class Exchange {
       );
     }
 
-    await Promise.all(
-      this.assets.map(async (asset, i) => {
-        return this.getSubExchange(asset).load(
+    for (var i = 0; i < this.assets.length; i++) {
+        let asset = this.assets[i];
+        await this.getSubExchange(asset).load(
           asset,
           this.opts,
           [perpSyncQueueAccs[i]],
@@ -646,16 +649,11 @@ export class Exchange {
           loadConfig.throttleMs,
           callback
         );
-      })
-    );
 
-    await Promise.all(
-      this._assets.map(async (a) => {
-        await this.getPerpMarket(a).serumMarket.updateDecoded(
+      await this.getPerpMarket(asset).serumMarket.updateDecoded(
           this.connection as unknown as ConnectionZstd
-        );
-      })
-    );
+      );
+    }
 
     for (var se of this.getAllSubExchanges()) {
       // Only subscribe to the orderbook for assets provided in the override

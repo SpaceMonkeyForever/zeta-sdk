@@ -2458,6 +2458,8 @@ export class CrossClient {
   }
 
   public async updateOrders() {
+    // TODO: This is a hack for now
+    return true;
     this.updateOpenOrdersSync();
     if (!this.account || !this.account.triggerOrderBits) {
       return;
