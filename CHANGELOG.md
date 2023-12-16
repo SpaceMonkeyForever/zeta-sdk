@@ -5,7 +5,32 @@ Version changes are pinned to SDK releases.
 
 ## Unreleased
 
-## [1.15.0]
+## [1.16.3]
+
+- New trigger order ixs ([#324](https://github.com/zetamarkets/sdk/pull/324))
+
+## [1.16.2]
+
+- Prune orders v2. ([#323](https://github.com/zetamarkets/sdk/pull/323))
+
+## [1.16.1]
+
+- Remove leverage clamp in getMaxTradeSize. ([#322](https://github.com/zetamarkets/sdk/pull/322))
+
+## [1.16.0]
+
+- Add in IDL changes for tif order traversal. ([#321](https://github.com/zetamarkets/sdk/pull/321]))
+- Min lot size changes. ([#318](https://github.com/zetamarkets/sdk/pull/318))
+
+## [1.15.3]
+
+- Override asset loading for devnet ([#320](https://github.com/zetamarkets/sdk/pull/320))
+
+## [1.15.2]
+
+- Bugfix getMaxTradeSize being too conservative with positive uPnL ([#315](https://github.com/zetamarkets/sdk/pull/315))
+
+## [1.15.1]
 
 - New asset $JTO. ([#316](https://github.com/zetamarkets/sdk/pull/316))
 
