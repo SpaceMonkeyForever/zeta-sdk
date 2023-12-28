@@ -5,6 +5,36 @@ Version changes are pinned to SDK releases.
 
 ## Unreleased
 
+## [1.17.2]
+
+- BONK constants ([#337](https://github.com/zetamarkets/sdk/pull/337))
+
+## [1.17.1]
+
+- Example cleanup. ([#336](https://github.com/zetamarkets/sdk/pull/336))
+- Fetch min lot sizes from state. ([#331](https://github.com/zetamarkets/sdk/pull/331))
+
+## [1.17.0]
+
+- New asset ONEMBONK (BONK x 1 million) ([#333](https://github.com/zetamarkets/sdk/pull/333))
+
+## [1.16.9]
+
+- New set utils in Exchange ([#328](https://github.com/zetamarkets/sdk/pull/332))
+
+## [1.16.8]
+
+- Robustness improvements around RPCs and cranking ([#330](https://github.com/zetamarkets/sdk/pull/330))
+- Add user to placeOrderEvent ([#328](https://github.com/zetamarkets/sdk/pull/328))
+
+## [1.16.7]
+
+- Return undefined from getMaxTradeSize if price is 0 ([#327](https://github.com/zetamarkets/sdk/pull/327))
+
+## [1.16.6]
+
+- Fix two sentry errors ([#317](https://github.com/zetamarkets/sdk/pull/317))
+
 ## [1.16.5]
 
 - Better auto priority fees ([#326](https://github.com/zetamarkets/sdk/pull/326))
