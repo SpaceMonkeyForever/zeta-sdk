@@ -3,11 +3,32 @@
 All notable changes to this project will be documented in this file.
 Version changes are pinned to SDK releases.
 
-## Unreleased
+## [1.20.0]
 
-- Add post only front order type.
+- Add JUP asset. ([346](https://github.com/zetamarkets/sdk/pull/346))
 
-## [1.18.0]
+## [1.19.1]
+
+- Add optional startIndex to findAvailableTriggerOrderBit(). ([#345](https://github.com/zetamarkets/sdk/pull/345))
+
+## [1.19.0]
+
+- Add instruction to update maker fee percentage. ([#334](https://github.com/zetamarkets/sdk/pull/334))
+- Add instruction to update margin account type. ([#334](https://github.com/zetamarkets/sdk/pull/334))
+
+## [1.18.5]
+
+- Bugfix - Use execution price for uPnL trading fee calc. ([#342](https://github.com/zetamarkets/sdk/pull/342))
+
+## [1.18.4]
+
+- Add preixs to cross client place order and create place trigger order ix. ([#341](https://github.com/zetamarkets/sdk/pull/341))
+
+## [1.18.3]
+
+- Add fake cancel optionality for get max trade size. ([#338](https://github.com/zetamarkets/sdk/pull/338))
+
+## [1.18.2]
 
 - Add sei. ([#339](https://github.com/zetamarkets/sdk/pull/339))
 - Post only front order type. ([#312](https://github.com/zetamarkets/sdk/pull/312))
