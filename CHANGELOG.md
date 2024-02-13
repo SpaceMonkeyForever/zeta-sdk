@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 Version changes are pinned to SDK releases.
 
+## [1.21.0]
+
+- New asset $DYM. ([#352](https://github.com/zetamarkets/sdk/pull/352))
+- More load options - assets and throttleMs. ([#351](https://github.com/zetamarkets/sdk/pull/351))
+
+## [1.20.4]
+
+- Add PNL to TradeEventV3 and PositionSize to ApplyFundingEvent. ([#344](https://github.com/zetamarkets/sdk/pull/344))
+
+## [1.20.3]
+
+- Refactor settleAndBurnVaultTokens to allow an accountLimit. ([#350](https://github.com/zetamarkets/sdk/pull/350))
+
 ## [1.20.2]
 
 - Relax throwing if no open orders account is detected in some client functions. ([#349](https://github.com/zetamarkets/sdk/pull/349))
