@@ -377,7 +377,7 @@ export class Exchange {
     if (loadConfig.loadAssets) {
       this._assets = loadConfig.loadAssets;
     } else {
-      this._assets = assets.allAssets();
+      this._assets = assets.allAssets(loadConfig.network);
     }
     this._provider = new anchor.AnchorProvider(
       loadConfig.connection,
@@ -1140,7 +1140,7 @@ export class Exchange {
       new Uint8Array([orderIndex])
     )[0];
     let tx = new Transaction().add(
-      instructions.cancelTriggerOrderIx(
+      instructions.forceCancelTriggerOrderIx(
         orderIndex,
         this._provider.wallet.publicKey,
         triggerAccount,
