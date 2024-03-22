@@ -3,7 +3,42 @@
 All notable changes to this project will be documented in this file.
 Version changes are pinned to SDK releases.
 
-## [Unreleased]
+## [1.24.0]
+
+- Add placeMultiOrders to program-instructions. ([#369](https://github.com/zetamarkets/sdk/pull/369))
+
+## [1.23.6]
+
+- Extra util getFeeBps() ([#368](https://github.com/zetamarkets/sdk/pull/368))
+
+## [1.23.5]
+
+- Add support for fee tiers. ([#358](https://github.com/zetamarkets/sdk/pull/358))
+
+## [1.23.4]
+
+- Add close account utils: closeAccountAndManager and withdrawAndCloseAccountAndCloseManager. ([#366](https://github.com/zetamarkets/sdk/pull/366))
+
+## [1.23.3]
+
+- New function closeAllPositions(). ([#362](https://github.com/zetamarkets/sdk/pull/362))
+- New option to specify retry amount for txs. Use CrossClient.setTxRetryAmount(). ([#362](https://github.com/zetamarkets/sdk/pull/362))
+
+## [1.23.2]
+
+- Real-time maker rebate. ([#359](https://github.com/zetamarkets/sdk/pull/359))
+
+## [1.23.1]
+
+- Skipped
+
+## [1.23.0]
+
+- Add functionality for referral accounts. ([#357](https://github.com/zetamarkets/sdk/pull/357))
+
+### Breaking
+
+- Remove old client.ts and subclient.ts. ([#357](https://github.com/zetamarkets/sdk/pull/357))
 
 ## [1.22.1]
 
