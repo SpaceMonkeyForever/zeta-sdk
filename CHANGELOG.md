@@ -3,6 +3,68 @@
 All notable changes to this project will be documented in this file.
 Version changes are pinned to SDK releases.
 
+## [1.29.3]
+
+- WIF. ([#391](https://github.com/zetamarkets/sdk/pull/391))
+
+## [1.29.2]
+
+- Bugfix orderloss anchor.BN/number conversion ([#390](https://github.com/zetamarkets/sdk/pull/390))
+
+## [1.29.1]
+
+- Bump placeorder CU units to 400k ([#389](https://github.com/zetamarkets/sdk/pull/389))
+
+## [1.29.0]
+
+- Add airdrop communities ([#386](https://github.com/zetamarkets/sdk/pull/386))
+
+## [1.28.1]
+
+- Trim trailing \0s on referral IDs ([#388](https://github.com/zetamarkets/sdk/pull/388))
+
+## [1.28.0]
+
+- Add potential order loss to account margining.
+- Add 10% oracle deviation protection to orders.
+
+## [1.26.4]
+
+- Respect Exchange.skipRpcConfirmation everywhere. ([#384](https://github.com/zetamarkets/sdk/pull/384))
+- New util isAffiliateCodeAvailable(). ([#382](https://github.com/zetamarkets/sdk/pull/382))
+
+## [1.26.3]
+
+- Add crank market generation util. ([#383](https://github.com/zetamarkets/sdk/pull/383))
+
+## [1.26.2]
+
+- Spam sendRawTransaction() in utils.processTransaction(). ([#381](https://github.com/zetamarkets/sdk/pull/381))
+
+## [1.26.1]
+
+- Add new update pricing ix. ([#379](https://github.com/zetamarkets/sdk/pull/379))
+
+## [1.26.0]
+
+- Add W. ([#377](https://github.com/zetamarkets/sdk/pull/377))
+
+## [1.25.3]
+
+- Fix rounding in util functions. ([#375](https://github.com/zetamarkets/sdk/pull/375))
+
+## [1.25.2]
+
+- Update to closeOpenOrdersV4. ([#372](https://github.com/zetamarkets/sdk/pull/372))
+
+## [1.25.0]
+
+- Subscribe to CMA manager ([#363](https://github.com/zetamarkets/sdk/pull/363))
+- Add new util instructions for account creation and referrals in cross-client.ts ([#363](https://github.com/zetamarkets/sdk/pull/363))
+- Improve error handling for RPC errors ([#363](https://github.com/zetamarkets/sdk/pull/363))
+- Improve tx confirmation to use blockheight and add new Exchange.skipRpcConfirmation option ([#363](https://github.com/zetamarkets/sdk/pull/363))
+- Fix risk utils to use getFeeBps() ([#363](https://github.com/zetamarkets/sdk/pull/363))
+
 ## [1.24.1]
 
 - Add `createPlaceMultiOrderInstruction` to cross-client. ([#370](https://github.com/zetamarkets/sdk/pull/370))

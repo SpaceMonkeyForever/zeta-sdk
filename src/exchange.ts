@@ -292,6 +292,7 @@ export class Exchange {
   }
 
   public maxRpcRetries: number | undefined = undefined;
+  public skipRpcConfirmation: boolean | undefined = undefined;
 
   // Handy map to grab zetagroup asset by pubkey without an RPC fetch
   // or having to manually filter all zetaGroups
@@ -312,6 +313,18 @@ export class Exchange {
   }
   private _priorityFee: number = 0;
 
+  // toggle to use jito bundles
+  public get useJitoBundle(): boolean {
+    return this._useJitoBundle;
+  }
+  private _useJitoBundle: boolean = false;
+
+  // jito tip
+  public get jitoTip(): number {
+    return this._jitoTip;
+  }
+  private _jitoTip: number = 0;
+
   public get useAutoPriorityFee(): boolean {
     return this._useAutoPriorityFee;
   }
@@ -320,8 +333,6 @@ export class Exchange {
   private _autoPriorityFeeOffset: number = 0;
   private _autoPriorityFeeMultiplier: number = 1;
   private _autoPriorityFeeUseMax: boolean = false;
-
-  public _txConfirmationPollSeconds = 20;
 
   // Micro lamports per CU of fees.
   public get autoPriorityFeeUpperLimit(): number {
@@ -359,6 +370,14 @@ export class Exchange {
     this._priorityFee = microLamportsPerCU;
   }
 
+  public setUseJitoBundle(option: boolean) {
+    this._useJitoBundle = option;
+  }
+
+  public updateJitoTip(tipAmountInLamports: number) {
+    this._jitoTip = tipAmountInLamports;
+  }
+
   public updateAutoPriorityFeeUpperLimit(microLamportsPerCU: number) {
     this._autoPriorityFeeUpperLimit = microLamportsPerCU;
   }
@@ -372,7 +391,7 @@ export class Exchange {
     wallet = new types.DummyWallet()
   ) {
     if (this.isSetup) {
-      throw "Exchange already setup";
+      throw Error("Exchange already setup");
     }
     if (loadConfig.loadAssets) {
       this._assets = loadConfig.loadAssets;
@@ -592,7 +611,7 @@ export class Exchange {
     callback?: (asset: Asset, event: EventType, slot: number, data: any) => void
   ) {
     if (this.isInitialized) {
-      throw "Exchange already loaded";
+      throw Error("Exchange already loaded");
     }
 
     if (loadConfig.network == Network.LOCALNET && loadConfig.loadFromStore) {
@@ -1061,6 +1080,14 @@ export class Exchange {
     await this.getSubExchange(asset).updatePricing();
   }
 
+  public async updatePricingV3(
+    asset: Asset,
+    price: anchor.BN,
+    timestamp: anchor.BN
+  ) {
+    await this.getSubExchange(asset).updatePricingV3(price, timestamp);
+  }
+
   public async updatePricingPubkeys(
     asset: Asset,
     oracle: PublicKey,
@@ -1132,7 +1159,8 @@ export class Exchange {
 
   public async adminCancelTriggerOrder(
     orderIndex: number,
-    crossMarginAccount: PublicKey
+    crossMarginAccount: PublicKey,
+    enforceTpslConditions: boolean = true
   ) {
     let triggerAccount = utils.getTriggerOrder(
       this.programId,
@@ -1144,7 +1172,8 @@ export class Exchange {
         orderIndex,
         this._provider.wallet.publicKey,
         triggerAccount,
-        crossMarginAccount
+        crossMarginAccount,
+        enforceTpslConditions
       )
     );
     return await utils.processTransaction(this._provider, tx);

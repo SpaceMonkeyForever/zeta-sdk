@@ -16,6 +16,7 @@ export enum Asset {
   JUP = "JUP",
   DYM = "DYM",
   STRK = "STRK",
+  WIF = "WIF",
   UNDEFINED = "UNDEFINED",
 }
 
@@ -76,6 +77,7 @@ export const FLEX_MINTS = {
     [Asset.JUP]: new PublicKey("rYFexooTE27wUDaJsjpy8UdyKqUHxroPvfB2Hgmajjt"),
     [Asset.DYM]: new PublicKey("EgsE6WkPfaNT9iEDyrUmNb4C4jCaJ6BPC9wZsp6CdRFj"),
     [Asset.STRK]: new PublicKey("7dEBs64vVgs8Ws3DkK7cwxSMe9RzQ21pnYawXgFaxisp"),
+    [Asset.WIF]: new PublicKey("BgDrDxc75EqPTXPUTCFMnYVYPeWK3CimPz2LGw4egsYc"),
   },
   devnet: {
     [Asset.APT]: new PublicKey("FbfkphUHaAd7c27RqhzKBRAPX8T5AzFBH259sbGmNuvG"),
@@ -96,6 +98,7 @@ export const FLEX_MINTS = {
     [Asset.JUP]: new PublicKey("7uP5h7kxRaSbd2dz5e6gZp8yhqazyMvaXVoNZ4HsgZ2n"),
     [Asset.DYM]: new PublicKey("FxxBzHfSZc794sRw6aLs7KuaG9iBy1hSLLFV8LLQYAiL"),
     [Asset.STRK]: new PublicKey("C42HXAXQiV6EqxzTvmwff6FgCPNw7r2MgvJ9uv8UNdce"),
+    [Asset.WIF]: new PublicKey("7jCmRqJaJq5iojCwGqq5DdwUBYPhrpvJcgNZsFLM4Pd5"),
   },
 };
 
@@ -164,6 +167,8 @@ export const FEE_TIER_MAP_BPS = {
     [MarginAccountType.NORMAL_T3]: 7,
     [MarginAccountType.NORMAL_T4]: 6,
     [MarginAccountType.NORMAL_T5]: 5,
+    [MarginAccountType.NORMAL_T6]: 4,
+    [MarginAccountType.NORMAL_T7]: 3,
   },
   maker: {
     [MarginAccountType.MARKET_MAKER]: 0,
@@ -179,7 +184,28 @@ export const FEE_TIER_MAP_BPS = {
     [MarginAccountType.NORMAL_T3]: 1.4,
     [MarginAccountType.NORMAL_T4]: 1.2,
     [MarginAccountType.NORMAL_T5]: 1,
+    [MarginAccountType.NORMAL_T6]: 0.8,
+    [MarginAccountType.NORMAL_T7]: 0.6,
   },
+};
+
+export const ACCOUNT_TYPE_TO_FEE_TIER_MAP = {
+  [MarginAccountType.MARKET_MAKER_T0]: 0,
+  [MarginAccountType.MARKET_MAKER_T1]: 1,
+  [MarginAccountType.MARKET_MAKER_T2]: 2,
+  [MarginAccountType.MARKET_MAKER_T3]: 3,
+  [MarginAccountType.MARKET_MAKER_T4]: 4,
+  [MarginAccountType.MARKET_MAKER_T5]: 5,
+  [MarginAccountType.MARKET_MAKER_T6]: 6,
+  [MarginAccountType.MARKET_MAKER_T7]: 7,
+  [MarginAccountType.NORMAL]: 0,
+  [MarginAccountType.NORMAL_T1]: 1,
+  [MarginAccountType.NORMAL_T2]: 2,
+  [MarginAccountType.NORMAL_T3]: 3,
+  [MarginAccountType.NORMAL_T4]: 4,
+  [MarginAccountType.NORMAL_T5]: 5,
+  [MarginAccountType.NORMAL_T6]: 6,
+  [MarginAccountType.NORMAL_T7]: 7,
 };
 
 export const MAX_SETTLE_AND_CLOSE_PER_TX = 4;
@@ -242,6 +268,7 @@ export const PYTH_PRICE_FEEDS = {
     [Asset.JUP]: new PublicKey("8uMQw668EowuxXcX6oYohLepTCoZmk9WEnj224qevLqj"),
     [Asset.DYM]: new PublicKey("9XFg7LwjRp2UjqkdiEdeA9wSNovgc5v9iW231UMfeSDz"),
     [Asset.STRK]: new PublicKey("6gtqwzdgeb8Luay2BSbyn3tobqfr3tWjdyP2tsySSiJu"),
+    [Asset.WIF]: new PublicKey("Ae9pWfoS4jS8WFxMTApKHkmMaod171aRcekm1iFbsmoy"),
   },
   devnet: {
     [Asset.SOL]: new PublicKey("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix"),
@@ -270,6 +297,7 @@ export const PYTH_PRICE_FEEDS = {
     [Asset.JUP]: new PublicKey("g6eRCbboSwK4tSWngn773RCMexr1APQr4uA9bGZBYfo"),
     [Asset.DYM]: new PublicKey("CSRRrhXa6DYu1W5jf89A7unCATdug2Z33tYyV2NXZZxa"),
     [Asset.STRK]: new PublicKey("899ZkaKUTFZprwCAY3xnSAdWs3Ma6oDW3YqX8zpis1No"),
+    [Asset.WIF]: new PublicKey("6ABgrEZk8urs6kJ1JNdC1sspH5zKXRqxy8sg3ZG2cQps"),
   },
 };
 
@@ -294,8 +322,8 @@ export const ACTIVE_MARKETS = ACTIVE_EXPIRIES * PRODUCTS_PER_EXPIRY + 1; // +1 f
 export const TOTAL_EXPIRIES = 5;
 export const TOTAL_MARKETS = PRODUCTS_PER_EXPIRY * (TOTAL_EXPIRIES + 1);
 export const PERP_INDEX = TOTAL_MARKETS - 1;
-export const ACTIVE_PERP_MARKETS = 14;
-export const UNUSED_PERP_MARKETS = 11;
+export const ACTIVE_PERP_MARKETS = 15;
+export const UNUSED_PERP_MARKETS = 10;
 
 export const DEFAULT_EXCHANGE_POLL_INTERVAL = 30;
 export const DEFAULT_MARKET_POLL_INTERVAL = 5;
@@ -454,8 +482,8 @@ export const STATIC_AND_PERPS_LUT: {
     key: new PublicKey("GYCrZc3MkTtLYiYGvcVMZUeqGZwP6S9bVGAbXASGeNtD"),
     state: {
       deactivationSlot: BigInt("18446744073709551615"),
-      lastExtendedSlot: 249727678,
-      lastExtendedSlotStartIndex: 176,
+      lastExtendedSlot: 262107072,
+      lastExtendedSlotStartIndex: 202,
       authority: new PublicKey("EwXPBSBUPqYDNA3dUVZ3nonFuaw3wGGJqEUTJbknDirH"),
       addresses: [
         new PublicKey("8eExPiLp47xbSDYkbuem4qnLUpbLTfZBeFuEJoh6EUr2"),
@@ -647,6 +675,20 @@ export const STATIC_AND_PERPS_LUT: {
         new PublicKey("HpTGysQZFppoLQcRrfFu47teEajxharPP7f19XJuKU16"),
         new PublicKey("ygRrmycNpMzEsqLYRpDMS9J1SHaFMG4Rm3tjkyVGVnc"),
         new PublicKey("EV1UdC9dSz7a66hqYW5TkVe6JihSAyfEwVLwYzy1cGXz"),
+        new PublicKey("H9j8CT1bFiWHaZUPMooEaxMRHdWdJ5T9CzFn41z96JHW"),
+        new PublicKey("11111111111111111111111111111111"),
+        new PublicKey("EPgAyxa8GJiQzy9pgiTA3bRinxfzyiNxDhorr1KGUznB"),
+        new PublicKey("AXrWGEh3c8Jiz2Uhr6kiUxYypjgVYanm48jSWhXjudV8"),
+        new PublicKey("8CCrvJUSFta3HMRSFSM5M1LUX2MeFHT5Wcgjo55HQCqC"),
+        new PublicKey("7iXjCwhQg9sVys8Ze7Ybusf7WECJBABAmWvGxVMVfX7F"),
+        new PublicKey("GcMVDi71RqWuBGgxSo8LKPoSCSkzPXAGmMnr3t5fJZar"),
+        new PublicKey("FnDtHqrTuySW94Yy3QFYjMtvyYuJkRp3H6xtDDG1Ehi"),
+        new PublicKey("KsUoxhYnaTUFTJ6SuAdAAmUBVrExhCq7SXE7BCu5irh"),
+        new PublicKey("9JZFuP5C78QvDrz3HucskAU6uog3XkoEa4Tbwxs3TTgY"),
+        new PublicKey("HHvs3T3rcFnZFiTdKn5eXwg1w9ADGB98CpyprHW7jYMB"),
+        new PublicKey("GpvkM2TeZXqQzFtBBgqoJYfc3BPScEHaSk41dwMrsKiW"),
+        new PublicKey("H3j7orNNo7pzzHJZ1WFsrpJAxWCiE8QW3aatbGufu2PC"),
+        new PublicKey("6ABgrEZk8urs6kJ1JNdC1sspH5zKXRqxy8sg3ZG2cQps"),
       ],
     },
   }),

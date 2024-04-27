@@ -50,6 +50,7 @@ import { Network } from "./network";
 import cloneDeep from "lodash.clonedeep";
 import * as os from "os";
 import { OpenOrders, _OPEN_ORDERS_LAYOUT_V2 } from "./serum/market";
+import axios from "axios";
 
 export function getNativeTickSize(asset: Asset): number {
   return Exchange.state.tickSizes[assets.assetToIndex(asset)];
@@ -494,7 +495,7 @@ export function getReferrerIdAccount(
   return anchor.web3.PublicKey.findProgramAddressSync(
     [
       Buffer.from(anchor.utils.bytes.utf8.encode("referrer-id-account")),
-      Buffer.from(id),
+      Buffer.from(id.replace(/[\0]+$/g, "")),
     ],
     programId
   );
@@ -709,11 +710,8 @@ export function convertDecimalToNativeInteger(
   roundingFactor: number = constants.MIN_NATIVE_TICK_SIZE
 ): number {
   return (
-    parseInt(
-      (
-        (amount * Math.pow(10, constants.PLATFORM_PRECISION)) /
-        roundingFactor
-      ).toFixed(0)
+    Math.trunc(
+      (amount * Math.pow(10, constants.PLATFORM_PRECISION)) / roundingFactor
     ) * roundingFactor
   );
 }
@@ -772,11 +770,8 @@ export function convertDecimalToNativeLotSize(
   roundingFactor: number = constants.MIN_NATIVE_MIN_LOT_SIZE
 ): number {
   return (
-    parseInt(
-      (
-        (amount * Math.pow(10, constants.POSITION_PRECISION)) /
-        roundingFactor
-      ).toFixed(0)
+    Math.trunc(
+      (amount * Math.pow(10, constants.POSITION_PRECISION)) / roundingFactor
     ) * roundingFactor
   );
 }
@@ -941,6 +936,137 @@ export async function simulateTransaction(
   return { events, raw: logs };
 }
 
+function txConfirmationCheck(expectedLevel: string, currentLevel: string) {
+  const levels = ["processed", "confirmed", "finalized"];
+
+  if (levels.indexOf(expectedLevel) == -1) {
+    throw Error(
+      "Please use commitment level 'processed', 'confirmed' or 'finalized'"
+    );
+  }
+
+  if (levels.indexOf(currentLevel) >= levels.indexOf(expectedLevel)) {
+    return true;
+  }
+  return false;
+}
+
+export async function processTransactionJito(
+  provider: anchor.AnchorProvider,
+  tx: Transaction,
+  signers?: Array<Signer>,
+  opts?: ConfirmOptions,
+  lutAccs?: AddressLookupTableAccount[],
+  blockhash?: { blockhash: string; lastValidBlockHeight: number }
+): Promise<TransactionSignature> {
+  if (Exchange.jitoTip == 0) {
+    throw Error("Jito bundle tip has not been set.");
+  }
+
+  if (Exchange.priorityFee != 0) {
+    tx.instructions.unshift(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: Math.round(Exchange.priorityFee),
+      })
+    );
+  }
+
+  tx.instructions.push(
+    SystemProgram.transfer({
+      fromPubkey: Exchange.provider.publicKey,
+      toPubkey: new PublicKey(
+        "DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL" // Jito tip account
+      ),
+      lamports: Exchange.jitoTip, // tip
+    })
+  );
+
+  let recentBlockhash =
+    blockhash ??
+    (await provider.connection.getLatestBlockhash(
+      Exchange.blockhashCommitment
+    ));
+
+  let vTx: VersionedTransaction = new VersionedTransaction(
+    new TransactionMessage({
+      payerKey: provider.wallet.publicKey,
+      recentBlockhash: recentBlockhash.blockhash,
+      instructions: tx.instructions,
+    }).compileToV0Message(lutAccs)
+  );
+
+  vTx.sign(
+    (signers ?? [])
+      .filter((s) => s !== undefined)
+      .map((kp) => {
+        return kp;
+      })
+  );
+  vTx = (await provider.wallet.signTransaction(vTx)) as VersionedTransaction;
+
+  let rawTx = vTx.serialize();
+
+  const encodedTx = bs58.encode(rawTx);
+  const jitoURL = "https://mainnet.block-engine.jito.wtf/api/v1/transactions";
+  const payload = {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "sendTransaction",
+    params: [encodedTx],
+  };
+
+  let txOpts = opts || commitmentConfig(provider.connection.commitment);
+  let txSig: string;
+  try {
+    const response = await axios.post(jitoURL, payload, {
+      headers: { "Content-Type": "application/json" },
+    });
+    txSig = response.data.result;
+  } catch (error) {
+    console.error("Error:", error);
+    throw new Error("Jito Bundle Error: cannot send.");
+  }
+
+  if (Exchange.skipRpcConfirmation) {
+    return txSig;
+  }
+
+  let currentBlockHeight = await provider.connection.getBlockHeight(
+    provider.connection.commitment
+  );
+
+  while (currentBlockHeight < recentBlockhash.lastValidBlockHeight) {
+    // Keep resending to maximise the chance of confirmation
+    await provider.connection.sendRawTransaction(rawTx, {
+      skipPreflight: true,
+      preflightCommitment: provider.connection.commitment,
+    });
+
+    let status = await provider.connection.getSignatureStatus(txSig);
+    currentBlockHeight = await provider.connection.getBlockHeight(
+      provider.connection.commitment
+    );
+    if (status.value != null) {
+      if (status.value.err != null) {
+        // Gets caught and parsed in the later catch
+        let err = parseInt(status.value.err["InstructionError"][1]["Custom"]);
+        let parsedErr = parseError(err);
+        throw parsedErr;
+      }
+      if (
+        txConfirmationCheck(
+          txOpts.commitment ? txOpts.commitment.toString() : "confirmed",
+          status.value.confirmationStatus.toString()
+        )
+      ) {
+        return txSig;
+      }
+    }
+    await sleep(500); // Don't spam the RPC
+  }
+  throw Error(`Transaction ${txSig} was not confirmed`);
+}
+
 export async function processTransaction(
   provider: anchor.AnchorProvider,
   tx: Transaction,
@@ -951,6 +1077,17 @@ export async function processTransaction(
   blockhash?: { blockhash: string; lastValidBlockHeight: number },
   retries?: number
 ): Promise<TransactionSignature> {
+  if (Exchange.useJitoBundle) {
+    return processTransactionJito(
+      provider,
+      tx,
+      signers,
+      opts,
+      lutAccs,
+      blockhash
+    );
+  }
+
   let failures = 0;
   while (true) {
     let rawTx: Buffer | Uint8Array;
@@ -1013,6 +1150,7 @@ export async function processTransaction(
     }
 
     let txOpts = opts || commitmentConfig(provider.connection.commitment);
+    let txSig;
     try {
       // Integration tests don't like the split send + confirm :(
       if (Exchange.network == Network.LOCALNET) {
@@ -1023,33 +1161,54 @@ export async function processTransaction(
         );
       }
 
-      let txSig = await provider.connection.sendRawTransaction(rawTx, {
+      txSig = await provider.connection.sendRawTransaction(rawTx, {
         skipPreflight: true,
+        preflightCommitment: provider.connection.commitment,
       });
 
-      let now = Date.now() / 1000;
       // Poll the tx confirmation for N seconds
       // Polling is more reliable than websockets using confirmTransaction()
-      while (Date.now() / 1000 - now < Exchange._txConfirmationPollSeconds) {
-        let status = await provider.connection.getSignatureStatus(txSig);
-        if (status.value != null) {
-          if (status.value.err != null) {
-            let parsedErr = parseError(
-              parseInt(status.value.err["InstructionError"][1]["Custom"])
-            );
-            throw parsedErr;
+      let currentBlockHeight = 0;
+      if (!Exchange.skipRpcConfirmation) {
+        while (currentBlockHeight < recentBlockhash.lastValidBlockHeight) {
+          // Keep resending to maximise the chance of confirmation
+          await provider.connection.sendRawTransaction(rawTx, {
+            skipPreflight: true,
+            preflightCommitment: provider.connection.commitment,
+          });
+
+          let status = await provider.connection.getSignatureStatus(txSig);
+          currentBlockHeight = await provider.connection.getBlockHeight(
+            provider.connection.commitment
+          );
+          if (status.value != null) {
+            if (status.value.err != null) {
+              // Gets caught and parsed in the later catch
+              let err = parseInt(
+                status.value.err["InstructionError"][1]["Custom"]
+              );
+              throw err;
+            }
+            if (
+              txConfirmationCheck(
+                txOpts.commitment ? txOpts.commitment.toString() : "confirmed",
+                status.value.confirmationStatus.toString()
+              )
+            ) {
+              return txSig;
+            }
           }
-          if (status.value.confirmationStatus == txOpts.commitment.toString()) {
-            return txSig;
-          }
+          await sleep(500); // Don't spam the RPC
         }
-        await sleep(400); // Don't spam the RPC
+        throw Error(`Transaction ${txSig} was not confirmed`);
+      } else {
+        return txSig;
       }
-      throw `Transaction ${txSig} was not confirmed`;
     } catch (err) {
       let parsedErr = parseError(err);
       failures += 1;
       if (!retries || failures > retries) {
+        console.log(`txSig: ${txSig} failed. Error = ${parsedErr}`);
         throw parsedErr;
       }
       console.log(`Transaction failed to send. Retrying...`);
@@ -1067,7 +1226,12 @@ export function parseError(err: any) {
 
   const programError = anchor.ProgramError.parse(err, errors.idlErrors);
   if (typeof err == typeof 0 && errors.idlErrors.has(err)) {
-    return errors.idlErrors.get(err);
+    return new errors.NativeAnchorError(
+      parseInt(err),
+      errors.idlErrors.get(err),
+      [],
+      []
+    );
   }
   if (programError) {
     return programError;
@@ -1286,13 +1450,31 @@ export async function cleanZetaMarketHalted(asset: Asset) {
  */
 export async function crankMarket(
   asset: Asset,
-  openOrdersToMargin?: Map<PublicKey, PublicKey>,
+  openOrdersToMargin?: Map<string, PublicKey>,
   crankLimit?: number
 ): Promise<boolean> {
+  let ix = await createCrankMarketIx(asset, openOrdersToMargin, crankLimit);
+  if (ix == null) return true;
+  let tx = new Transaction()
+    .add(
+      ComputeBudgetProgram.setComputeUnitLimit({
+        units: 250_000,
+      })
+    )
+    .add(ix);
+  await processTransaction(Exchange.provider, tx);
+  return false;
+}
+
+export async function createCrankMarketIx(
+  asset: Asset,
+  openOrdersToMargin?: Map<string, PublicKey>,
+  crankLimit?: number
+): Promise<TransactionInstruction | null> {
   let market = Exchange.getPerpMarket(asset);
   let eventQueue = await market.serumMarket.loadEventQueue(Exchange.connection);
   if (eventQueue.length == 0) {
-    return true;
+    return null;
   }
   const openOrdersSet = new Set();
   // We pass in a couple of extra accounts for perps so the limit is lower
@@ -1316,15 +1498,20 @@ export async function crankMarket(
 
   let remainingAccounts: any[] = new Array(uniqueOpenOrders.length * 2);
 
-  // TODO test support for both crossmargin and marginaccounts
   await Promise.all(
     uniqueOpenOrders.map(async (openOrders, index) => {
       let marginAccount: PublicKey;
-      if (openOrdersToMargin && !openOrdersToMargin.has(openOrders)) {
+      if (
+        openOrdersToMargin &&
+        !openOrdersToMargin.has(openOrders.toBase58())
+      ) {
         marginAccount = await getAccountFromOpenOrders(openOrders, asset);
-        openOrdersToMargin.set(openOrders, marginAccount);
-      } else if (openOrdersToMargin && openOrdersToMargin.has(openOrders)) {
-        marginAccount = openOrdersToMargin.get(openOrders);
+        openOrdersToMargin.set(openOrders.toBase58(), marginAccount);
+      } else if (
+        openOrdersToMargin &&
+        openOrdersToMargin.has(openOrders.toBase58())
+      ) {
+        marginAccount = openOrdersToMargin.get(openOrders.toBase58());
       } else {
         marginAccount = await getAccountFromOpenOrders(openOrders, asset);
       }
@@ -1343,17 +1530,13 @@ export async function crankMarket(
     })
   );
 
-  let tx = new Transaction().add(
-    instructions.crankMarketIx(
-      asset,
-      market.address,
-      market.serumMarket.eventQueueAddress,
-      constants.DEX_PID[Exchange.network],
-      remainingAccounts
-    )
+  return instructions.crankMarketIx(
+    asset,
+    market.address,
+    market.serumMarket.eventQueueAddress,
+    constants.DEX_PID[Exchange.network],
+    remainingAccounts
   );
-  await processTransaction(Exchange.provider, tx);
-  return false;
 }
 
 /*
@@ -1733,6 +1916,19 @@ export function convertBufferToTrimmedString(buffer: number[]): string {
   return bufferString.substring(0, splitIndex);
 }
 
+export async function fetchReferralId(user: PublicKey) {
+  const accKey = getReferrerPubkeyAccount(Exchange.programId, user)[0];
+  const accBuffer =
+    await Exchange.program.account.referrerPubkeyAccount.fetchNullable(
+      accKey.toString()
+    );
+
+  if (accBuffer == null) {
+    return null;
+  }
+  return Buffer.from(accBuffer.referrerId).toString();
+}
+
 export async function applyPerpFunding(asset: Asset, keys: PublicKey[]) {
   let remainingAccounts = keys.map((key) => {
     return { pubkey: key, isSigner: false, isWritable: true };
@@ -1900,6 +2096,16 @@ export function median(arr: number[]): number | undefined {
   const s = [...arr].sort((a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return s.length % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid];
+}
+
+export async function isAffiliateCodeAvailable(code: string): Promise<boolean> {
+  let referrerIdAddress = getReferrerIdAccount(Exchange.programId, code)[0];
+  let referrerIdAccount =
+    await Exchange.program.account.referrerIdAccount.fetchNullable(
+      referrerIdAddress
+    );
+
+  return referrerIdAccount == null;
 }
 
 export const checkLiquidity = (
@@ -2171,6 +2377,14 @@ export function calculateTakeTriggerOrderExecutionPrice(
     );
   }
   return executionPrice;
+}
+
+export function getFeeTier(accountType: constants.MarginAccountType): number {
+  let tier = constants.ACCOUNT_TYPE_TO_FEE_TIER_MAP[accountType];
+  if (tier == undefined) {
+    return 0;
+  }
+  return tier;
 }
 
 export function getFeeBps(

@@ -15,6 +15,16 @@ import { Asset } from "./constants";
 import * as constants from "./constants";
 import { assetToIndex, toProgramAsset } from "./assets";
 import { Market } from "./market";
+import {
+  RegExpMatcher,
+  englishDataset,
+  englishRecommendedTransformers,
+} from "obscenity";
+
+const profanityMatcher = new RegExpMatcher({
+  ...englishDataset.build(),
+  ...englishRecommendedTransformers,
+});
 
 export function initializeCombinedInsuranceVaultIx(): TransactionInstruction {
   let [insuranceVault, insuranceVaultNonce] =
@@ -443,7 +453,7 @@ export function initializeOpenOrdersV3Ix(
   ];
 }
 
-export function closeOpenOrdersV3Ix(
+export function closeOpenOrdersV4Ix(
   asset: Asset,
   userKey: PublicKey,
   crossMarginAccount: PublicKey,
@@ -453,8 +463,9 @@ export function closeOpenOrdersV3Ix(
     Exchange.programId,
     openOrders
   );
+  let market = Exchange.getPerpMarket(asset);
 
-  return Exchange.program.instruction.closeOpenOrdersV3(
+  return Exchange.program.instruction.closeOpenOrdersV4(
     openOrdersMapNonce,
     toProgramAsset(asset),
     {
@@ -465,9 +476,10 @@ export function closeOpenOrdersV3Ix(
         openOrders,
         crossMarginAccount: crossMarginAccount,
         authority: userKey,
-        market: Exchange.getPerpMarket(asset).address,
+        market: market.address,
         serumAuthority: Exchange.serumAuthority,
         openOrdersMap,
+        eventQueue: market.serumMarket.eventQueueAddress,
       },
     }
   );
@@ -785,16 +797,21 @@ export function forceCancelTriggerOrderIx(
   triggerOrderBit: number,
   authority: PublicKey,
   triggerOrder: PublicKey,
-  marginAccount: PublicKey
+  marginAccount: PublicKey,
+  enforceTpslConditions: boolean = true
 ): TransactionInstruction {
-  return Exchange.program.instruction.forceCancelTriggerOrder(triggerOrderBit, {
-    accounts: {
-      state: Exchange.stateAddress,
-      admin: authority,
-      triggerOrder: triggerOrder,
-      marginAccount: marginAccount,
-    },
-  });
+  return Exchange.program.instruction.forceCancelTriggerOrder(
+    triggerOrderBit,
+    enforceTpslConditions,
+    {
+      accounts: {
+        state: Exchange.stateAddress,
+        admin: authority,
+        triggerOrder: triggerOrder,
+        marginAccount: marginAccount,
+      },
+    }
+  );
 }
 
 export function editTriggerOrderIx(
@@ -1510,6 +1527,32 @@ export function updatePricingV2Ix(asset: Asset): TransactionInstruction {
   });
 }
 
+export function updatePricingV3Ix(
+  asset: Asset,
+  price: anchor.BN,
+  timestamp: anchor.BN
+): TransactionInstruction {
+  let subExchange = Exchange.getSubExchange(asset);
+  let marketData = Exchange.getPerpMarket(asset);
+  let asset_index = assetToIndex(asset);
+  return Exchange.program.instruction.updatePricingV3(
+    toProgramAsset(asset),
+    price,
+    timestamp,
+    {
+      accounts: {
+        state: Exchange.stateAddress,
+        pricing: Exchange.pricingAddress,
+        oracle: Exchange.pricing.oracles[asset_index],
+        perpMarket: marketData.address,
+        perpBids: subExchange.markets.market.serumMarket.bidsAddress,
+        perpAsks: subExchange.markets.market.serumMarket.asksAddress,
+        pricingAdmin: Exchange.state.pricingAdmin,
+      },
+    }
+  );
+}
+
 export function applyPerpFundingIx(
   asset: Asset,
   remainingAccounts: any[]
@@ -2011,12 +2054,33 @@ export function updateAdminIx(
   return Exchange.program.instruction.updateAdmin(accounts);
 }
 
+export function updatePricingAdminIx(
+  secondary: boolean,
+  admin: PublicKey,
+  newAdmin: PublicKey
+): TransactionInstruction {
+  let accounts = {
+    accounts: {
+      state: Exchange.stateAddress,
+      admin,
+      newAdmin,
+    },
+  };
+  if (secondary) {
+    return Exchange.program.instruction.updatePricingAdmin(accounts);
+  }
+  return Exchange.program.instruction.updateAdmin(accounts);
+}
+
 export function initializeReferrerAccountsIx(
   id: string,
   user: PublicKey,
   referrerIdAccount: PublicKey,
   referrerPubkeyAccount: PublicKey
 ): TransactionInstruction {
+  if (profanityMatcher.hasMatch(id)) {
+    throw Error("ID has profanity, be nice!");
+  }
   return Exchange.program.instruction.initializeReferrerAccounts(id, {
     accounts: {
       authority: user,
@@ -2254,6 +2318,19 @@ export function toggleMarketMakerIx(
       state: Exchange.stateAddress,
       admin: Exchange.state.admin,
       marginAccount: account,
+    },
+  });
+}
+
+export function chooseAirdropCommunityIx(
+  community: number,
+  accountManager: PublicKey,
+  authority: PublicKey
+): TransactionInstruction {
+  return Exchange.program.instruction.chooseAirdropCommunity(community, {
+    accounts: {
+      crossMarginAccountManager: accountManager,
+      authority,
     },
   });
 }
