@@ -32,6 +32,7 @@ import { SubExchange } from "./subexchange";
 import * as instructions from "./program-instructions";
 import { Orderbook } from "./serum/market";
 import fetch from "cross-fetch";
+import { HttpProvider } from "@bloxroute/solana-trader-client-ts";
 
 export class Exchange {
   /**
@@ -96,6 +97,11 @@ export class Exchange {
     return this._provider.connection as unknown as ConnectionZstd;
   }
   private _provider: anchor.AnchorProvider;
+
+  public get httpProvider(): HttpProvider {
+    return this._httpProvider;
+  }
+  private _httpProvider: HttpProvider;
 
   /**
    * Separate connection used for orderbook subscriptions.
@@ -325,6 +331,15 @@ export class Exchange {
   }
   private _jitoTip: number = 0;
 
+  // extra connection objects to send transactions down
+  public get doubleDownConnections(): Connection[] {
+    return this._doubleDownConnections;
+  }
+  public addDoubleDownConnection(connection: Connection) {
+    this._doubleDownConnections.push(connection);
+  }
+  private _doubleDownConnections: Connection[] = [];
+
   public get useAutoPriorityFee(): boolean {
     return this._useAutoPriorityFee;
   }
@@ -333,6 +348,10 @@ export class Exchange {
   private _autoPriorityFeeOffset: number = 0;
   private _autoPriorityFeeMultiplier: number = 1;
   private _autoPriorityFeeUseMax: boolean = false;
+  public get tipMultiplier(): number {
+    return this._tipMultiplier;
+  }
+  private _tipMultiplier: number = 1;
 
   // Micro lamports per CU of fees.
   public get autoPriorityFeeUpperLimit(): number {
@@ -364,6 +383,10 @@ export class Exchange {
 
   public setAutoPriorityFeeUseMax(useMax: boolean) {
     this._autoPriorityFeeUseMax = useMax;
+  }
+
+  public setTipMultiplier(multiplier: number) {
+    this._tipMultiplier = multiplier;
   }
 
   public updatePriorityFee(microLamportsPerCU: number) {
@@ -554,61 +577,16 @@ export class Exchange {
     await this.updateZetaPricing();
   }
 
-  public async initializeZetaGroup(
-    asset: Asset,
-    oracle: PublicKey,
-    oracleBackupFeed: PublicKey,
-    oracleBackupProgram: PublicKey,
-    pricingArgs: instructions.InitializeZetaGroupPricingArgs,
-    perpArgs: instructions.UpdatePerpParametersArgs,
-    marginArgs: instructions.UpdateMarginParametersArgs,
-    expiryArgs: instructions.UpdateZetaGroupExpiryArgs,
-    perpsOnly: boolean = false,
-    flexUnderlying: boolean = false
-  ) {
-    let underlyingMint = utils.getUnderlyingMint(asset);
-    let tx = new Transaction().add(
-      instructions.initializeZetaGroupIx(
-        asset,
-        underlyingMint,
-        oracle,
-        oracleBackupFeed,
-        oracleBackupProgram,
-        pricingArgs,
-        perpArgs,
-        marginArgs,
-        expiryArgs,
-        perpsOnly,
-        flexUnderlying
-      )
-    );
-    try {
-      await utils.processTransaction(
-        this._provider,
-        tx,
-        [],
-        utils.defaultCommitment(),
-        this.useLedger
-      );
-    } catch (e) {
-      console.error(`Initialize zeta group failed: ${e}`);
-      console.log(e);
-    }
-
-    await this.updateState();
-
-    if (this.getSubExchange(asset) == undefined) {
-      await this.addSubExchange(asset, new SubExchange());
-      await this.getSubExchange(asset).initialize(asset);
-    }
-
-    await this.updateZetaPricing();
-  }
-
   public async load(
     loadConfig: types.LoadExchangeConfig,
     wallet = new types.DummyWallet(),
-    callback?: (asset: Asset, event: EventType, slot: number, data: any) => void
+    callback?: (
+      asset: Asset,
+      event: EventType,
+      slot: number,
+      data: any
+    ) => void,
+    bloxrouteHttpProvider?: HttpProvider
   ) {
     if (this.isInitialized) {
       throw Error("Exchange already loaded");
@@ -620,6 +598,16 @@ export class Exchange {
 
     if (!this.isSetup) {
       this.initialize(loadConfig, wallet);
+    }
+
+    if (bloxrouteHttpProvider) {
+      this._httpProvider = bloxrouteHttpProvider;
+    }
+
+    if (loadConfig.doubleDownConnections) {
+      for (var con of loadConfig.doubleDownConnections) {
+        this.addDoubleDownConnection(con);
+      }
     }
 
     this._riskCalculator = new RiskCalculator(this.assets);
@@ -966,12 +954,19 @@ export class Exchange {
       this._pricingAddress as PublicKeyZstd,
       async (accountInfo: AccountInfo<Buffer>, context: Context) => {
         this._pricing = this.program.coder.accounts.decode(
-          "Pricing",
+          types.ProgramAccountType.Pricing,
           accountInfo.data
         );
 
+        const assetsToMarkPrices = {};
+
+        for (const asset of this.assets) {
+          const markPrice = this.subExchanges.get(asset).getMarkPrice();
+          assetsToMarkPrices[asset] = markPrice;
+        }
+
         if (callback !== undefined) {
-          callback(null, EventType.PRICING, context.slot, null);
+          callback(null, EventType.PRICING, context.slot, assetsToMarkPrices);
         }
       },
       this.provider.connection.commitment,
@@ -1029,17 +1024,6 @@ export class Exchange {
     await this.getSubExchange(asset).updatePerpParameters(args);
   }
 
-  public async updateZetaGroupExpiryParameters(
-    asset: Asset,
-    args: instructions.UpdateZetaGroupExpiryArgs
-  ) {
-    await this.getSubExchange(asset).updateZetaGroupExpiryParameters(args);
-  }
-
-  public async toggleZetaGroupPerpsOnly(asset: Asset) {
-    await this.getSubExchange(asset).toggleZetaGroupPerpsOnly();
-  }
-
   public async updateSerumMarkets(asset: Asset) {
     await this.getSubExchange(asset).updateSerumMarkets();
   }
@@ -1062,10 +1046,6 @@ export class Exchange {
     await this.getSubExchange(asset).initializeZetaMarketsTIFEpochCycle(
       cycleLengthSecs
     );
-  }
-
-  public async initializeMarketStrikes(asset: Asset) {
-    await this.getSubExchange(asset).initializeMarketStrikes();
   }
 
   public async initializePerpSyncQueue(asset: Asset) {
@@ -1091,7 +1071,6 @@ export class Exchange {
   public async updatePricingPubkeys(
     asset: Asset,
     oracle: PublicKey,
-    oracleBackupFeed: PublicKey,
     market: PublicKey,
     perpSyncQueue: PublicKey,
     zetaGroupKey: PublicKey
@@ -1100,7 +1079,6 @@ export class Exchange {
       instructions.updateZetaPricingPubkeysIx({
         asset: toProgramAsset(asset) as any,
         oracle,
-        oracleBackupFeed,
         market,
         perpSyncQueue,
         zetaGroupKey,

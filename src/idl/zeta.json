@@ -1599,6 +1599,132 @@
       ]
     },
     {
+      "name": "initializeMarketPda",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marketIndexes",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pricing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "asset",
+          "type": {
+            "defined": "Asset"
+          }
+        }
+      ]
+    },
+    {
+      "name": "initializeZetaSpecificMarketVaults",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marketIndexes",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pricing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "market",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "baseMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "zetaBaseVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "zetaQuoteVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "serumAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "asset",
+          "type": {
+            "defined": "Asset"
+          }
+        }
+      ]
+    },
+    {
       "name": "initializeZetaMarket",
       "accounts": [
         {
@@ -1653,16 +1779,6 @@
         },
         {
           "name": "quoteMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "zetaBaseVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "zetaQuoteVault",
           "isMut": true,
           "isSigner": false
         },
@@ -6961,7 +7077,7 @@
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -6970,7 +7086,7 @@
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -6979,7 +7095,7 @@
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -6988,7 +7104,7 @@
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -6999,7 +7115,7 @@
                 {
                   "defined": "AnchorDecimal"
                 },
-                15
+                16
               ]
             }
           },
@@ -7010,7 +7126,7 @@
                 {
                   "defined": "AnchorDecimal"
                 },
-                10
+                9
               ]
             }
           },
@@ -7021,7 +7137,7 @@
                 {
                   "defined": "AnchorDecimal"
                 },
-                15
+                16
               ]
             }
           },
@@ -7032,7 +7148,7 @@
                 {
                   "defined": "AnchorDecimal"
                 },
-                10
+                9
               ]
             }
           },
@@ -7041,7 +7157,7 @@
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -7050,7 +7166,7 @@
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -7059,7 +7175,7 @@
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7068,7 +7184,7 @@
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7077,7 +7193,7 @@
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7086,7 +7202,7 @@
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7095,7 +7211,7 @@
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7104,7 +7220,7 @@
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7113,7 +7229,7 @@
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7122,7 +7238,7 @@
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7133,7 +7249,7 @@
                 {
                   "defined": "PerpParameters"
                 },
-                15
+                16
               ]
             }
           },
@@ -7144,7 +7260,7 @@
                 {
                   "defined": "PerpParameters"
                 },
-                10
+                9
               ]
             }
           },
@@ -7155,7 +7271,7 @@
                 {
                   "defined": "MarginParameters"
                 },
-                15
+                16
               ]
             }
           },
@@ -7166,7 +7282,7 @@
                 {
                   "defined": "MarginParameters"
                 },
-                10
+                9
               ]
             }
           },
@@ -7177,7 +7293,7 @@
                 {
                   "defined": "Product"
                 },
-                15
+                16
               ]
             }
           },
@@ -7188,7 +7304,7 @@
                 {
                   "defined": "Product"
                 },
-                10
+                9
               ]
             }
           },
@@ -7197,7 +7313,7 @@
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7206,7 +7322,7 @@
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7227,7 +7343,7 @@
             "type": {
               "array": [
                 "bool",
-                15
+                16
               ]
             }
           },
@@ -7236,7 +7352,7 @@
             "type": {
               "array": [
                 "bool",
-                10
+                9
               ]
             }
           },
@@ -7628,7 +7744,7 @@
                 {
                   "defined": "HaltStateV2"
                 },
-                15
+                16
               ]
             }
           },
@@ -7639,7 +7755,7 @@
                 {
                   "defined": "HaltStateV2"
                 },
-                10
+                9
               ]
             }
           },
@@ -7652,7 +7768,7 @@
             "type": {
               "array": [
                 "u32",
-                15
+                16
               ]
             }
           },
@@ -7661,7 +7777,7 @@
             "type": {
               "array": [
                 "u32",
-                10
+                9
               ]
             }
           },
@@ -7670,7 +7786,7 @@
             "type": {
               "array": [
                 "u32",
-                15
+                16
               ]
             }
           },
@@ -7679,7 +7795,7 @@
             "type": {
               "array": [
                 "u32",
-                10
+                9
               ]
             }
           },
@@ -8130,7 +8246,7 @@
             "type": {
               "array": [
                 "u8",
-                15
+                16
               ]
             }
           },
@@ -8139,7 +8255,7 @@
             "type": {
               "array": [
                 "u8",
-                10
+                9
               ]
             }
           },
@@ -8154,7 +8270,7 @@
                 {
                   "defined": "AnchorDecimal"
                 },
-                15
+                16
               ]
             }
           },
@@ -8165,7 +8281,7 @@
                 {
                   "defined": "AnchorDecimal"
                 },
-                10
+                9
               ]
             }
           },
@@ -8176,7 +8292,7 @@
                 {
                   "defined": "ProductLedger"
                 },
-                15
+                16
               ]
             }
           },
@@ -8187,7 +8303,7 @@
                 {
                   "defined": "ProductLedger"
                 },
-                10
+                9
               ]
             }
           },
@@ -8204,7 +8320,7 @@
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -8213,7 +8329,7 @@
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -8997,7 +9113,7 @@
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -9071,34 +9187,6 @@
             "type": {
               "defined": "Asset"
             }
-          },
-          {
-            "name": "marketNonce",
-            "type": "u8"
-          },
-          {
-            "name": "baseMintNonce",
-            "type": "u8"
-          },
-          {
-            "name": "quoteMintNonce",
-            "type": "u8"
-          },
-          {
-            "name": "zetaBaseVaultNonce",
-            "type": "u8"
-          },
-          {
-            "name": "zetaQuoteVaultNonce",
-            "type": "u8"
-          },
-          {
-            "name": "dexBaseVaultNonce",
-            "type": "u8"
-          },
-          {
-            "name": "dexQuoteVaultNonce",
-            "type": "u8"
           },
           {
             "name": "vaultSignerNonce",
@@ -9560,10 +9648,6 @@
             "type": "publicKey"
           },
           {
-            "name": "oracleBackupFeed",
-            "type": "publicKey"
-          },
-          {
             "name": "market",
             "type": "publicKey"
           },
@@ -9765,6 +9849,9 @@
           },
           {
             "name": "WIF"
+          },
+          {
+            "name": "RNDR"
           },
           {
             "name": "UNDEFINED"

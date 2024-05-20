@@ -44,12 +44,12 @@ import {
 } from "./program-types";
 import * as types from "./types";
 import * as instructions from "./program-instructions";
-import { readBigInt64LE } from "./oracle-utils";
 import { assets } from ".";
 import { Network } from "./network";
 import cloneDeep from "lodash.clonedeep";
 import * as os from "os";
 import { OpenOrders, _OPEN_ORDERS_LAYOUT_V2 } from "./serum/market";
+import { HttpProvider } from "@bloxroute/solana-trader-client-ts";
 import axios from "axios";
 
 export function getNativeTickSize(asset: Asset): number {
@@ -951,6 +951,113 @@ function txConfirmationCheck(expectedLevel: string, currentLevel: string) {
   return false;
 }
 
+export async function processTransactionBloxroute(
+  httpProvider: HttpProvider,
+  anchorProvider: anchor.AnchorProvider,
+  tx: Transaction,
+  tip: number,
+  blockhash?: { blockhash: string; lastValidBlockHeight: number },
+  retries?: number,
+  skipConfirmation?: boolean
+): Promise<TransactionSignature> {
+  tx.add(
+    SystemProgram.transfer({
+      fromPubkey: anchorProvider.publicKey,
+      toPubkey: new PublicKey(
+        "HWEoBxYs7ssKuudEjzjmpfJVX7Dvi7wescFsVx2L5yoY" // Trader API tip wallet
+      ),
+      lamports: tip,
+    })
+  );
+
+  if (Exchange.priorityFee != 0) {
+    tx.instructions.unshift(
+      ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: Math.round(Exchange.priorityFee),
+      })
+    );
+  }
+
+  let failures = 0;
+  while (true) {
+    let recentBlockhash =
+      blockhash ??
+      (await anchorProvider.connection.getLatestBlockhash(
+        Exchange.blockhashCommitment
+      ));
+
+    let v0Tx: VersionedTransaction = new VersionedTransaction(
+      new TransactionMessage({
+        payerKey: anchorProvider.publicKey,
+        recentBlockhash: recentBlockhash.blockhash,
+        instructions: tx.instructions,
+      }).compileToV0Message(getZetaLutArr())
+    );
+    v0Tx = (await anchorProvider.wallet.signTransaction(
+      v0Tx
+    )) as VersionedTransaction;
+    let rawTx = v0Tx.serialize();
+
+    let txSig;
+    try {
+      txSig = (
+        await httpProvider.postSubmitV2({
+          transaction: {
+            content: Buffer.from(rawTx).toString("base64"),
+            isCleanup: false,
+          },
+          skipPreFlight: true,
+          frontRunningProtection: false,
+        })
+      ).signature;
+
+      // Poll the tx confirmation for N seconds
+      // Polling is more reliable than websockets using confirmTransaction()
+      let currentBlockHeight = 0;
+      if (!skipConfirmation) {
+        while (currentBlockHeight < recentBlockhash.lastValidBlockHeight) {
+          let status = await anchorProvider.connection.getSignatureStatus(
+            txSig
+          );
+          currentBlockHeight = await anchorProvider.connection.getBlockHeight(
+            anchorProvider.connection.commitment
+          );
+          if (status.value != null) {
+            if (status.value.err != null) {
+              // Gets caught and parsed in the later catch
+              let err = parseInt(
+                status.value.err["InstructionError"][1]["Custom"]
+              );
+              throw err;
+            }
+            if (
+              txConfirmationCheck(
+                "confirmed",
+                status.value.confirmationStatus.toString()
+              )
+            ) {
+              return txSig;
+            }
+          }
+          await sleep(1500); // Don't spam the RPC
+        }
+        throw Error(`Transaction ${txSig} was not confirmed`);
+      } else {
+        return txSig;
+      }
+    } catch (err) {
+      let parsedErr = parseError(err);
+      failures += 1;
+      if (!retries || failures > retries) {
+        console.log(`txSig: ${txSig} failed. Error = ${parsedErr}`);
+        throw parsedErr;
+      }
+      console.log(`Transaction failed to send. Retrying...`);
+      console.log(`failCount=${failures}. error=${parsedErr}`);
+    }
+  }
+}
+
 export async function processTransactionJito(
   provider: anchor.AnchorProvider,
   tx: Transaction,
@@ -1067,6 +1174,33 @@ export async function processTransactionJito(
   throw Error(`Transaction ${txSig} was not confirmed`);
 }
 
+export async function sendRawTransactionCaught(con: Connection, rawTx: any) {
+  try {
+    let txSig = await con.sendRawTransaction(rawTx, {
+      skipPreflight: true,
+      preflightCommitment: con.commitment,
+    });
+    return txSig;
+  } catch (e) {
+    console.log(`Error sending tx: ${e}`);
+  }
+}
+
+export async function sendJitoTxCaught(payload: any) {
+  try {
+    let response = await axios.post(
+      "https://mainnet.block-engine.jito.wtf/api/v1/transactions",
+      payload,
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    return response.data.result;
+  } catch (e) {
+    console.log(`Error sending tx: ${e}`);
+  }
+}
+
 export async function processTransaction(
   provider: anchor.AnchorProvider,
   tx: Transaction,
@@ -1086,6 +1220,19 @@ export async function processTransaction(
       lutAccs,
       blockhash
     );
+  }
+
+  if (Exchange.httpProvider) {
+    let txSig = await processTransactionBloxroute(
+      Exchange.httpProvider,
+      provider,
+      tx,
+      Exchange.tipMultiplier * Exchange.priorityFee + 1050,
+      blockhash,
+      retries,
+      Exchange.skipRpcConfirmation
+    );
+    return txSig;
   }
 
   let failures = 0;
@@ -1151,6 +1298,9 @@ export async function processTransaction(
 
     let txOpts = opts || commitmentConfig(provider.connection.commitment);
     let txSig;
+    let allConnections = [provider.connection].concat(
+      Exchange.doubleDownConnections
+    );
     try {
       // Integration tests don't like the split send + confirm :(
       if (Exchange.network == Network.LOCALNET) {
@@ -1161,10 +1311,26 @@ export async function processTransaction(
         );
       }
 
-      txSig = await provider.connection.sendRawTransaction(rawTx, {
-        skipPreflight: true,
-        preflightCommitment: provider.connection.commitment,
-      });
+      let promises = [];
+      for (var con of allConnections) {
+        promises.push(sendRawTransactionCaught(con, rawTx));
+      }
+
+      // Jito's transactions endpoint, not a bundle
+      // Might as well send it here for extra success, it's free
+      if (Exchange.network == Network.MAINNET) {
+        const encodedTx = bs58.encode(rawTx);
+        const payload = {
+          jsonrpc: "2.0",
+          id: 1,
+          method: "sendTransaction",
+          params: [encodedTx],
+        };
+        promises.push(sendJitoTxCaught(payload));
+      }
+
+      // All tx sigs are the same
+      let txSig = await Promise.race(promises);
 
       // Poll the tx confirmation for N seconds
       // Polling is more reliable than websockets using confirmTransaction()
@@ -1172,10 +1338,10 @@ export async function processTransaction(
       if (!Exchange.skipRpcConfirmation) {
         while (currentBlockHeight < recentBlockhash.lastValidBlockHeight) {
           // Keep resending to maximise the chance of confirmation
-          await provider.connection.sendRawTransaction(rawTx, {
-            skipPreflight: true,
-            preflightCommitment: provider.connection.commitment,
-          });
+          for (var con of allConnections) {
+            promises.push(sendRawTransactionCaught(con, rawTx));
+          }
+          await Promise.race(promises);
 
           let status = await provider.connection.getSignatureStatus(txSig);
           currentBlockHeight = await provider.connection.getBlockHeight(
@@ -1272,6 +1438,64 @@ const SystemClockLayout = BufferLayout.struct([
   uint64("leaderScheduleEpoch"),
   int64("unixTimestamp"),
 ]);
+
+// https://github.com/nodejs/node/blob/v14.17.0/lib/internal/errors.js#L758
+const ERR_BUFFER_OUT_OF_BOUNDS = () =>
+  new Error("Attempt to access memory outside buffer bounds");
+
+// https://github.com/nodejs/node/blob/v14.17.0/lib/internal/errors.js#L1262
+const ERR_OUT_OF_RANGE = (str: string, range: string, received: number) =>
+  new Error(
+    `The value of "${str} is out of range. It must be ${range}. Received ${received}`
+  );
+
+// https://github.com/nodejs/node/blob/v14.17.0/lib/internal/errors.js#L968
+const ERR_INVALID_ARG_TYPE = (name: string, expected: string, actual: any) =>
+  new Error(
+    `The "${name}" argument must be of type ${expected}. Received ${actual}`
+  );
+
+// https://github.com/nodejs/node/blob/v14.17.0/lib/internal/validators.js#L127-L130
+function validateNumber(value: any, name: string) {
+  if (typeof value !== "number")
+    throw ERR_INVALID_ARG_TYPE(name, "number", value);
+}
+
+// https://github.com/nodejs/node/blob/v14.17.0/lib/internal/buffer.js#L68-L80
+function boundsError(value: number, length: number) {
+  if (Math.floor(value) !== value) {
+    validateNumber(value, "offset");
+    throw ERR_OUT_OF_RANGE("offset", "an integer", value);
+  }
+
+  if (length < 0) throw ERR_BUFFER_OUT_OF_BOUNDS();
+
+  throw ERR_OUT_OF_RANGE("offset", `>= 0 and <= ${length}`, value);
+}
+
+// https://github.com/nodejs/node/blob/v14.17.0/lib/internal/buffer.js#L129-L145
+export function readBigInt64LE(buffer: Buffer, offset = 0): bigint {
+  validateNumber(offset, "offset");
+  const first = buffer[offset];
+  const last = buffer[offset + 7];
+  if (first === undefined || last === undefined)
+    boundsError(offset, buffer.length - 8);
+  // tslint:disable-next-line:no-bitwise
+  const val =
+    buffer[offset + 4] +
+    buffer[offset + 5] * 2 ** 8 +
+    buffer[offset + 6] * 2 ** 16 +
+    (last << 24); // Overflow
+  return (
+    (BigInt(val) << BigInt(32)) + // tslint:disable-line:no-bitwise
+    BigInt(
+      first +
+        buffer[++offset] * 2 ** 8 +
+        buffer[++offset] * 2 ** 16 +
+        buffer[++offset] * 2 ** 24
+    )
+  );
+}
 
 export function getClockData(
   accountInfo: AccountInfo<Buffer>
@@ -2325,6 +2549,7 @@ async function initializeZetaMarket(
     console.log(`Market ${i} serum accounts already initialized...`);
   } else {
     try {
+      console.log("initialize zeta market accounts");
       await processTransaction(
         Exchange.provider,
         tx,
@@ -2341,6 +2566,7 @@ async function initializeZetaMarket(
     console.log(`Market ${i} already initialized. Skipping...`);
   } else {
     try {
+      console.log("initialize zeta market instruction");
       await processTransaction(
         Exchange.provider,
         tx2,

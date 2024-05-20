@@ -1599,6 +1599,132 @@ export type Zeta = {
       ]
     },
     {
+      "name": "initializeMarketPda",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marketIndexes",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pricing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "asset",
+          "type": {
+            "defined": "Asset"
+          }
+        }
+      ]
+    },
+    {
+      "name": "initializeZetaSpecificMarketVaults",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marketIndexes",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pricing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "market",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "baseMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "zetaBaseVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "zetaQuoteVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "serumAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "asset",
+          "type": {
+            "defined": "Asset"
+          }
+        }
+      ]
+    },
+    {
       "name": "initializeZetaMarket",
       "accounts": [
         {
@@ -1653,16 +1779,6 @@ export type Zeta = {
         },
         {
           "name": "quoteMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "zetaBaseVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "zetaQuoteVault",
           "isMut": true,
           "isSigner": false
         },
@@ -6961,7 +7077,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -6970,7 +7086,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -6979,7 +7095,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -6988,7 +7104,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -6999,7 +7115,7 @@ export type Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                15
+                16
               ]
             }
           },
@@ -7010,7 +7126,7 @@ export type Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                10
+                9
               ]
             }
           },
@@ -7021,7 +7137,7 @@ export type Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                15
+                16
               ]
             }
           },
@@ -7032,7 +7148,7 @@ export type Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                10
+                9
               ]
             }
           },
@@ -7041,7 +7157,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -7050,7 +7166,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -7059,7 +7175,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7068,7 +7184,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7077,7 +7193,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7086,7 +7202,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7095,7 +7211,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7104,7 +7220,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7113,7 +7229,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7122,7 +7238,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7133,7 +7249,7 @@ export type Zeta = {
                 {
                   "defined": "PerpParameters"
                 },
-                15
+                16
               ]
             }
           },
@@ -7144,7 +7260,7 @@ export type Zeta = {
                 {
                   "defined": "PerpParameters"
                 },
-                10
+                9
               ]
             }
           },
@@ -7155,7 +7271,7 @@ export type Zeta = {
                 {
                   "defined": "MarginParameters"
                 },
-                15
+                16
               ]
             }
           },
@@ -7166,7 +7282,7 @@ export type Zeta = {
                 {
                   "defined": "MarginParameters"
                 },
-                10
+                9
               ]
             }
           },
@@ -7177,7 +7293,7 @@ export type Zeta = {
                 {
                   "defined": "Product"
                 },
-                15
+                16
               ]
             }
           },
@@ -7188,7 +7304,7 @@ export type Zeta = {
                 {
                   "defined": "Product"
                 },
-                10
+                9
               ]
             }
           },
@@ -7197,7 +7313,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -7206,7 +7322,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -7227,7 +7343,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "bool",
-                15
+                16
               ]
             }
           },
@@ -7236,7 +7352,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "bool",
-                10
+                9
               ]
             }
           },
@@ -7628,7 +7744,7 @@ export type Zeta = {
                 {
                   "defined": "HaltStateV2"
                 },
-                15
+                16
               ]
             }
           },
@@ -7639,7 +7755,7 @@ export type Zeta = {
                 {
                   "defined": "HaltStateV2"
                 },
-                10
+                9
               ]
             }
           },
@@ -7652,7 +7768,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u32",
-                15
+                16
               ]
             }
           },
@@ -7661,7 +7777,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u32",
-                10
+                9
               ]
             }
           },
@@ -7670,7 +7786,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u32",
-                15
+                16
               ]
             }
           },
@@ -7679,7 +7795,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u32",
-                10
+                9
               ]
             }
           },
@@ -8130,7 +8246,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u8",
-                15
+                16
               ]
             }
           },
@@ -8139,7 +8255,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u8",
-                10
+                9
               ]
             }
           },
@@ -8154,7 +8270,7 @@ export type Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                15
+                16
               ]
             }
           },
@@ -8165,7 +8281,7 @@ export type Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                10
+                9
               ]
             }
           },
@@ -8176,7 +8292,7 @@ export type Zeta = {
                 {
                   "defined": "ProductLedger"
                 },
-                15
+                16
               ]
             }
           },
@@ -8187,7 +8303,7 @@ export type Zeta = {
                 {
                   "defined": "ProductLedger"
                 },
-                10
+                9
               ]
             }
           },
@@ -8204,7 +8320,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -8213,7 +8329,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -8997,7 +9113,7 @@ export type Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -9071,34 +9187,6 @@ export type Zeta = {
             "type": {
               "defined": "Asset"
             }
-          },
-          {
-            "name": "marketNonce",
-            "type": "u8"
-          },
-          {
-            "name": "baseMintNonce",
-            "type": "u8"
-          },
-          {
-            "name": "quoteMintNonce",
-            "type": "u8"
-          },
-          {
-            "name": "zetaBaseVaultNonce",
-            "type": "u8"
-          },
-          {
-            "name": "zetaQuoteVaultNonce",
-            "type": "u8"
-          },
-          {
-            "name": "dexBaseVaultNonce",
-            "type": "u8"
-          },
-          {
-            "name": "dexQuoteVaultNonce",
-            "type": "u8"
           },
           {
             "name": "vaultSignerNonce",
@@ -9560,10 +9648,6 @@ export type Zeta = {
             "type": "publicKey"
           },
           {
-            "name": "oracleBackupFeed",
-            "type": "publicKey"
-          },
-          {
             "name": "market",
             "type": "publicKey"
           },
@@ -9765,6 +9849,9 @@ export type Zeta = {
           },
           {
             "name": "WIF"
+          },
+          {
+            "name": "RNDR"
           },
           {
             "name": "UNDEFINED"
@@ -12913,6 +13000,132 @@ export const IDL: Zeta = {
       ]
     },
     {
+      "name": "initializeMarketPda",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marketIndexes",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pricing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "asset",
+          "type": {
+            "defined": "Asset"
+          }
+        }
+      ]
+    },
+    {
+      "name": "initializeZetaSpecificMarketVaults",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marketIndexes",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pricing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "market",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "baseMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "quoteMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "zetaBaseVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "zetaQuoteVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "serumAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "asset",
+          "type": {
+            "defined": "Asset"
+          }
+        }
+      ]
+    },
+    {
       "name": "initializeZetaMarket",
       "accounts": [
         {
@@ -12967,16 +13180,6 @@ export const IDL: Zeta = {
         },
         {
           "name": "quoteMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "zetaBaseVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "zetaQuoteVault",
           "isMut": true,
           "isSigner": false
         },
@@ -18275,7 +18478,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -18284,7 +18487,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -18293,7 +18496,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -18302,7 +18505,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -18313,7 +18516,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                15
+                16
               ]
             }
           },
@@ -18324,7 +18527,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                10
+                9
               ]
             }
           },
@@ -18335,7 +18538,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                15
+                16
               ]
             }
           },
@@ -18346,7 +18549,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                10
+                9
               ]
             }
           },
@@ -18355,7 +18558,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -18364,7 +18567,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -18373,7 +18576,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -18382,7 +18585,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -18391,7 +18594,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -18400,7 +18603,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -18409,7 +18612,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -18418,7 +18621,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -18427,7 +18630,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -18436,7 +18639,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -18447,7 +18650,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "PerpParameters"
                 },
-                15
+                16
               ]
             }
           },
@@ -18458,7 +18661,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "PerpParameters"
                 },
-                10
+                9
               ]
             }
           },
@@ -18469,7 +18672,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "MarginParameters"
                 },
-                15
+                16
               ]
             }
           },
@@ -18480,7 +18683,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "MarginParameters"
                 },
-                10
+                9
               ]
             }
           },
@@ -18491,7 +18694,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "Product"
                 },
-                15
+                16
               ]
             }
           },
@@ -18502,7 +18705,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "Product"
                 },
-                10
+                9
               ]
             }
           },
@@ -18511,7 +18714,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                15
+                16
               ]
             }
           },
@@ -18520,7 +18723,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "publicKey",
-                10
+                9
               ]
             }
           },
@@ -18541,7 +18744,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "bool",
-                15
+                16
               ]
             }
           },
@@ -18550,7 +18753,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "bool",
-                10
+                9
               ]
             }
           },
@@ -18942,7 +19145,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "HaltStateV2"
                 },
-                15
+                16
               ]
             }
           },
@@ -18953,7 +19156,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "HaltStateV2"
                 },
-                10
+                9
               ]
             }
           },
@@ -18966,7 +19169,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u32",
-                15
+                16
               ]
             }
           },
@@ -18975,7 +19178,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u32",
-                10
+                9
               ]
             }
           },
@@ -18984,7 +19187,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u32",
-                15
+                16
               ]
             }
           },
@@ -18993,7 +19196,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u32",
-                10
+                9
               ]
             }
           },
@@ -19444,7 +19647,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u8",
-                15
+                16
               ]
             }
           },
@@ -19453,7 +19656,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u8",
-                10
+                9
               ]
             }
           },
@@ -19468,7 +19671,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                15
+                16
               ]
             }
           },
@@ -19479,7 +19682,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "AnchorDecimal"
                 },
-                10
+                9
               ]
             }
           },
@@ -19490,7 +19693,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "ProductLedger"
                 },
-                15
+                16
               ]
             }
           },
@@ -19501,7 +19704,7 @@ export const IDL: Zeta = {
                 {
                   "defined": "ProductLedger"
                 },
-                10
+                9
               ]
             }
           },
@@ -19518,7 +19721,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -19527,7 +19730,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u64",
-                10
+                9
               ]
             }
           },
@@ -20311,7 +20514,7 @@ export const IDL: Zeta = {
             "type": {
               "array": [
                 "u64",
-                15
+                16
               ]
             }
           },
@@ -20385,34 +20588,6 @@ export const IDL: Zeta = {
             "type": {
               "defined": "Asset"
             }
-          },
-          {
-            "name": "marketNonce",
-            "type": "u8"
-          },
-          {
-            "name": "baseMintNonce",
-            "type": "u8"
-          },
-          {
-            "name": "quoteMintNonce",
-            "type": "u8"
-          },
-          {
-            "name": "zetaBaseVaultNonce",
-            "type": "u8"
-          },
-          {
-            "name": "zetaQuoteVaultNonce",
-            "type": "u8"
-          },
-          {
-            "name": "dexBaseVaultNonce",
-            "type": "u8"
-          },
-          {
-            "name": "dexQuoteVaultNonce",
-            "type": "u8"
           },
           {
             "name": "vaultSignerNonce",
@@ -20874,10 +21049,6 @@ export const IDL: Zeta = {
             "type": "publicKey"
           },
           {
-            "name": "oracleBackupFeed",
-            "type": "publicKey"
-          },
-          {
             "name": "market",
             "type": "publicKey"
           },
@@ -21079,6 +21250,9 @@ export const IDL: Zeta = {
           },
           {
             "name": "WIF"
+          },
+          {
+            "name": "RNDR"
           },
           {
             "name": "UNDEFINED"
