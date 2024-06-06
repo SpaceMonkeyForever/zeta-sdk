@@ -346,6 +346,7 @@ export enum ProgramAccountType {
   ZetaGroup = "ZetaGroup",
   Greeks = "Greeks",
   PerpSyncQueue = "PerpSyncQueue",
+  State = "State",
   Pricing = "Pricing",
 }
 
@@ -648,6 +649,7 @@ export interface LoadExchangeConfig {
   TIFBufferSeconds: number;
   loadAssets?: Asset[];
   doubleDownConnections?: Connection[];
+  blockhashCacheTimeoutSeconds?: number;
 }
 
 export function defaultLoadExchangeConfig(
