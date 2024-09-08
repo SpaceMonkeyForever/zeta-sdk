@@ -354,27 +354,31 @@ export class CrossClient {
     client._accountSubscriptionId = connection.onAccountChange(
       client._accountAddress,
       async (accountInfo: AccountInfo<Buffer>, context: Context) => {
-        client._account = Exchange.program.coder.accounts.decode(
-          types.ProgramAccountType.CrossMarginAccount,
-          accountInfo.data
-        );
-
-        if (throttle || client._updatingState) {
-          client._pendingUpdate = true;
-          client._pendingUpdateSlot = context.slot;
-          return;
+        try {
+          client._account = Exchange.program.coder.accounts.decode(
+            types.ProgramAccountType.CrossMarginAccount,
+            accountInfo.data
+          );
+  
+          if (throttle || client._updatingState) {
+            client._pendingUpdate = true;
+            client._pendingUpdateSlot = context.slot;
+            return;
+          }
+  
+          await client.updateState(false);
+          client._lastUpdateTimestamp = Exchange.clockTimestamp;
+  
+          if (callback !== undefined) {
+            callback(null, EventType.USER, context.slot, {
+              UserCallbackType: types.UserCallbackType.CROSSMARGINACCOUNTCHANGE,
+            });
+          }
+  
+          client.updateOpenOrdersAddresses();
+        } catch (e) {
+          console.log(`CrossMarginAccount subscription failed. Error: ${e}`);
         }
-
-        await client.updateState(false);
-        client._lastUpdateTimestamp = Exchange.clockTimestamp;
-
-        if (callback !== undefined) {
-          callback(null, EventType.USER, context.slot, {
-            UserCallbackType: types.UserCallbackType.CROSSMARGINACCOUNTCHANGE,
-          });
-        }
-
-        client.updateOpenOrdersAddresses();
       },
       connection.commitment
     );
@@ -382,15 +386,19 @@ export class CrossClient {
     client._accountManagerSubscriptionId = connection.onAccountChange(
       client._accountManagerAddress,
       async (accountInfo: AccountInfo<Buffer>, context: Context) => {
-        client._accountManager = Exchange.program.coder.accounts.decode(
-          types.ProgramAccountType.CrossMarginAccountManager,
-          accountInfo.data
-        );
-
-        if (callback !== undefined) {
-          callback(null, EventType.USER, context.slot, {
-            UserCallbackType: types.UserCallbackType.CROSSMARGINACCOUNTCHANGE,
-          });
+        try {
+          client._accountManager = Exchange.program.coder.accounts.decode(
+            types.ProgramAccountType.CrossMarginAccountManager,
+            accountInfo.data
+          );
+  
+          if (callback !== undefined) {
+            callback(null, EventType.USER, context.slot, {
+              UserCallbackType: types.UserCallbackType.CROSSMARGINACCOUNTCHANGE,
+            });
+          }
+        } catch (e) {
+          console.log(`CrossMarginAccountManager subscription failed. Error: ${e}`);
         }
       },
       connection.commitment
@@ -1404,7 +1412,7 @@ export class CrossClient {
 
     let tifOffsetToUse = utils.getTIFOffset(market, options.tifOptions);
 
-    let orderIx = instructions.placePerpOrderV4Ix(
+    let orderIx = instructions.placePerpOrderV5Ix(
       asset,
       price,
       size,
@@ -1419,7 +1427,8 @@ export class CrossClient {
       this.accountAddress,
       this._provider.wallet.publicKey,
       openOrdersPda,
-      this._whitelistTradingFeesAddress
+      this._whitelistTradingFeesAddress,
+      options.selfTradeBehavior
     );
 
     tx.add(orderIx);
@@ -1737,7 +1746,7 @@ export class CrossClient {
 
     let txs = this.createCancelTriggerOrdersTxs(triggerOrderIndexes);
 
-    let placeIx = instructions.placePerpOrderV4Ix(
+    let placeIx = instructions.placePerpOrderV5Ix(
       asset,
       price,
       size,
@@ -1752,7 +1761,8 @@ export class CrossClient {
       this.accountAddress,
       this._provider.wallet.publicKey,
       this._openOrdersAccounts[assetToIndex(asset)],
-      this._whitelistTradingFeesAddress
+      this._whitelistTradingFeesAddress,
+      options.selfTradeBehavior
     );
 
     // Edge case where user has 0 trigger orders
@@ -2274,7 +2284,7 @@ export class CrossClient {
     let market = Exchange.getPerpMarket(asset);
     let tifOffset = utils.getTIFOffset(market, options.tifOptions);
 
-    return instructions.placePerpOrderV4Ix(
+    return instructions.placePerpOrderV5Ix(
       asset,
       price,
       size,
@@ -2289,7 +2299,8 @@ export class CrossClient {
       this.accountAddress,
       this._provider.wallet.publicKey,
       openOrdersAccount,
-      this._whitelistTradingFeesAddress
+      this._whitelistTradingFeesAddress,
+      options.selfTradeBehavior
     );
   }
 
@@ -2470,7 +2481,7 @@ export class CrossClient {
     let tifOffsetToUse = utils.getTIFOffset(market, options.tifOptions);
 
     tx.add(
-      instructions.placePerpOrderV4Ix(
+      instructions.placePerpOrderV5Ix(
         asset,
         newOrderPrice,
         newOrderSize,
@@ -2485,7 +2496,8 @@ export class CrossClient {
         this.accountAddress,
         this._provider.wallet.publicKey,
         this._openOrdersAccounts[assetIndex],
-        this._whitelistTradingFeesAddress
+        this._whitelistTradingFeesAddress,
+        options.selfTradeBehavior
       )
     );
 
@@ -2540,7 +2552,7 @@ export class CrossClient {
     let tifOffsetToUse = utils.getTIFOffset(market, newOptions.tifOptions);
 
     tx.add(
-      instructions.placePerpOrderV4Ix(
+      instructions.placePerpOrderV5Ix(
         asset,
         newOrderPrice,
         newOrderSize,
@@ -2613,7 +2625,7 @@ export class CrossClient {
     let tifOffsetToUse = utils.getTIFOffset(market, newOptions.tifOptions);
 
     tx.add(
-      instructions.placePerpOrderV4Ix(
+      instructions.placePerpOrderV5Ix(
         asset,
         newOrderPrice,
         newOrderSize,

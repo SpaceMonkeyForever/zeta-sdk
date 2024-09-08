@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 Version changes are pinned to SDK releases.
 
+## [1.45.1]
+
+- Change GMC to POPCAT. ([#417](https://github.com/zetamarkets/sdk/pull/417))
+
+## [1.44.0]
+
+- Fix 'Invalid account discriminator' error when closing account. ([#416](https://github.com/zetamarkets/sdk/pull/416))
+
+## [1.43.0]
+
+- New asset GMC. ([#415](https://github.com/zetamarkets/sdk/pull/415))
+
+## [1.42.0]
+
+- Skipped
+
+## [1.41.0]
+
+- Add self trade behaviour and PlacePerpOrderV5. ([#413](https://github.com/zetamarkets/sdk/pull/413))
+- Add post-sign callback. ([#412](https://github.com/zetamarkets/sdk/pull/412))
+
 ## [1.40.0]
 
 - Add versioned tx support for process transaction. ([#408](https://github.com/zetamarkets/sdk/pull/408))
