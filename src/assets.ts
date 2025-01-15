@@ -64,13 +64,14 @@ export function assetToName(asset: Asset): string | null {
   if (asset == Asset.DYM) return "DYM";
   if (asset == Asset.STRK) return "STRK";
   if (asset == Asset.WIF) return "WIF";
-  if (asset == Asset.RNDR) return "RNDR";
   if (asset == Asset.TNSR) return "TNSR";
   if (asset == Asset.POPCAT) return "POPCAT";
   if (asset == Asset.EIGEN) return "EIGEN";
   if (asset == Asset.DBR) return "DBR";
   if (asset == Asset.GOAT) return "GOAT";
   if (asset == Asset.DRIFT) return "DRIFT";
+  if (asset == Asset.PNUT) return "PNUT";
+  if (asset == Asset.PENGU) return "PENGU";
   if (asset == null) return null; // Some things, like clock callbacks, are for all assets and return asset=null
   return "UNDEFINED";
 }
@@ -91,13 +92,14 @@ export function nameToAsset(name: string): Asset {
   if (name == "DYM") return Asset.DYM;
   if (name == "STRK") return Asset.STRK;
   if (name == "WIF") return Asset.WIF;
-  if (name == "RNDR") return Asset.RNDR;
   if (name == "TNSR") return Asset.TNSR;
   if (name == "POPCAT") return Asset.POPCAT;
   if (name == "EIGEN") return Asset.EIGEN;
   if (name == "DBR") return Asset.DBR;
   if (name == "GOAT") return Asset.GOAT;
   if (name == "DRIFT") return Asset.DRIFT;
+  if (name == "PNUT") return Asset.PNUT;
+  if (name == "PENGU") return Asset.PENGU;
   return Asset.UNDEFINED;
 }
 
@@ -121,13 +123,14 @@ export function toProgramAsset(asset: Asset): any {
   if (asset == Asset.DYM) return { dym: {} };
   if (asset == Asset.STRK) return { strk: {} };
   if (asset == Asset.WIF) return { wif: {} };
-  if (asset == Asset.RNDR) return { rndr: {} };
   if (asset == Asset.TNSR) return { tnsr: {} };
   if (asset == Asset.POPCAT) return { popcat: {} };
   if (asset == Asset.EIGEN) return { eigen: {} };
   if (asset == Asset.DBR) return { dbr: {} };
   if (asset == Asset.GOAT) return { goat: {} };
   if (asset == Asset.DRIFT) return { drift: {} };
+  if (asset == Asset.PNUT) return { pnut: {} };
+  if (asset == Asset.PENGU) return { pengu: {} };
   return { undefined: {} };
 }
 
@@ -177,9 +180,6 @@ export function fromProgramAsset(asset: any): Asset {
   if (objectEquals(asset, { wif: {} })) {
     return Asset.WIF;
   }
-  if (objectEquals(asset, { rndr: {} })) {
-    return Asset.RNDR;
-  }
   if (objectEquals(asset, { tnsr: {} })) {
     return Asset.TNSR;
   }
@@ -197,6 +197,12 @@ export function fromProgramAsset(asset: any): Asset {
   }
   if (objectEquals(asset, { drift: {} })) {
     return Asset.DRIFT;
+  }
+  if (objectEquals(asset, { pnut: {} })) {
+    return Asset.PNUT;
+  }
+  if (objectEquals(asset, { pengu: {} })) {
+    return Asset.PENGU;
   }
   return Asset.UNDEFINED;
 }
@@ -248,9 +254,6 @@ export function assetToIndex(asset: Asset): number {
     case Asset.WIF: {
       return 14;
     }
-    case Asset.RNDR: {
-      return 15;
-    }
     case Asset.TNSR: {
       return 16;
     }
@@ -268,6 +271,12 @@ export function assetToIndex(asset: Asset): number {
     }
     case Asset.DRIFT: {
       return 21;
+    }
+    case Asset.PNUT: {
+      return 22;
+    }
+    case Asset.PENGU: {
+      return 23;
     }
   }
   return 255; // Undefined is 255 onchain
@@ -320,9 +329,6 @@ export function indexToAsset(index: number): Asset {
     case 14: {
       return Asset.WIF;
     }
-    case 15: {
-      return Asset.RNDR;
-    }
     case 16: {
       return Asset.TNSR;
     }
@@ -340,6 +346,12 @@ export function indexToAsset(index: number): Asset {
     }
     case 21: {
       return Asset.DRIFT;
+    }
+    case 22: {
+      return Asset.PNUT;
+    }
+    case 23: {
+      return Asset.PENGU;
     }
   }
   return Asset.UNDEFINED;

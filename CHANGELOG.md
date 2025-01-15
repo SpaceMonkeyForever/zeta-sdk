@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 Version changes are pinned to SDK releases.
 
+## [1.57.0]
+
+- New asset PENGU. ([#431](https://github.com/zetamarkets/sdk/pull/431))
+
+## [1.56.0]
+
+- Remove RNDR from constants. ([#430](https://github.com/zetamarkets/sdk/pull/430))
+
+## [1.55.0]
+
+- New asset PNUT. ([#429](https://github.com/zetamarkets/sdk/pull/429))
+
+## [1.54.0]
+
+- Drop maximum number of funding accounts. ([#428](https://github.com/zetamarkets/sdk/pull/428))
+
 ## [1.53.0]
 
 - Add extra CU to liquidate and withdraw ixs. ([#427](https://github.com/zetamarkets/sdk/pull/427))
