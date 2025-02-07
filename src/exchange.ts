@@ -1157,6 +1157,7 @@ export class Exchange {
         market,
         perpSyncQueue,
         zetaGroupKey,
+        resetOracle: false
       })
     );
     await utils.processTransaction(this.provider, tx);
